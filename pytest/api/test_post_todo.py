@@ -26,7 +26,7 @@ def test_post_todo(api_request_context: APIRequestContext) -> None:
     random_id = f"0{random.randint(100000000, 999999999)}"
 
     payload = {
-        "title": "pee",
+        "title": "Walk the dog",
         "completed": False,
         "id": random_id  # Use the dynamically generated ID
     }
