@@ -3,9 +3,6 @@ import random
 from playwright.sync_api import APIRequestContext, Playwright
 from typing import Generator
 
-# In testing, a fixture provides a defined, reliable and consistent context for the tests.
-# We may configure "FUNCTION" scope & "SESSION" scope.
-
 @pytest.fixture(scope="session")
 def api_request_context(
     playwright: Playwright,
@@ -14,31 +11,46 @@ def api_request_context(
         base_url="http://localhost:3000"
     )
     yield request_context
-    # This method discards all stored responses
     request_context.dispose()
 
-# Test the POST request for creating a new todo item
-def test_post_todo(api_request_context: APIRequestContext) -> None:
-    # Dettagli estratti dalla richiesta POST nel file HAR
-    endpoint = "/todos"
+@pytest.fixture(scope="module")
+def todo_id() -> str:
+    """Generates and shares a random todo ID between tests"""
+    return f"0{random.randint(100000000, 999999999)}"
 
-    # Generate a random 10-digit ID starting with 0
-    random_id = f"0{random.randint(100000000, 999999999)}"
+def test_post_todo(api_request_context: APIRequestContext, todo_id: str) -> None:
+    """Test creating a new todo item."""
+    endpoint = "/todos"
 
     payload = {
         "title": "Walk the dog",
         "completed": False,
-        "id": random_id  # Use the dynamically generated ID
+        "id": todo_id  # Use the dynamically generated ID
     }
 
-    # Eseguire la richiesta POST
     response = api_request_context.post(endpoint, data=payload)
 
-    # Verificare che la richiesta abbia avuto successo
     assert response.status == 201, f"Expected status 201, got {response.status}"
     response_body = response.json()
-    
-    # Verificare i dati restituiti
+
     assert response_body["title"] == payload["title"]
     assert response_body["completed"] == payload["completed"]
     assert response_body["id"] == payload["id"]
+
+def test_complete_todo(api_request_context: APIRequestContext, todo_id: str) -> None:
+    """Test updating a todo item to mark it as completed."""
+    endpoint = f"/todos/{todo_id}"
+
+    update_payload = {
+        "title": "Walk the dog",
+        "completed": True,  # Updating this field
+        "id": todo_id
+    }
+
+    response = api_request_context.put(endpoint, data=update_payload)
+
+    assert response.status == 200, f"Expected status 200, got {response.status}"
+    response_body = response.json()
+
+    assert response_body["completed"] is True, "Todo item should be marked as completed"
+    assert response_body["id"] == todo_id
