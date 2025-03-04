@@ -1,9 +1,3 @@
-I'll explore your GitHub project and generate a professional README file.
-
-Here's a comprehensive README file for your Playwright + Python automation framework:
-
----
-
 # 🎭 **Playwright + Python: Web Testing Automation Framework**
 
 ## 📖 **Overview**
